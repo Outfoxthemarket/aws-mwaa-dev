@@ -69,6 +69,8 @@ execute_startup_script() {
     source stored_env
     export AIRFLOW_HOME="/usr/local/airflow"
     export AIRFLOW__CORE__LOAD_EXAMPLES="False"
+    chown -R airflow: ${AIRFLOW_HOME}
+    chmod -R 777 ${AIRFLOW_HOME}
     cd "$AIRFLOW_HOME"
   else
     echo "No startup script found, skipping execution."

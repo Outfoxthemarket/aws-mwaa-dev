@@ -1,0 +1,31 @@
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: "develop"
+
+    - name: Create DAG and imports templates
+      run: |
+        echo "import dependencies.DAG-${{ github.event.issue.number }}.code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
+        mkdir dependencies/DAG-${{ github.event.issue.number }}
+        echo "# Write your code here" > dependencies/DAG-${{ github.event.issue.number }}/code.py
+
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        base: "develop"
+        branch: "DAG-${{ github.event.issue.number }}"
+        title: 'PR DAG-${{ github.event.issue.number }}'
+        reviewers: 'marcosmartinezfco'
+        body: 'To merge this PR, please contact @marcosmartinezfco
+        
+        Make sure you have tested and reviewed the code.
+        This pull request was created automatically with github actions.'
