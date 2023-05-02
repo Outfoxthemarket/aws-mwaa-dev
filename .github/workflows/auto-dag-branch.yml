@@ -9,19 +9,22 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        ref: "develop"
 
-    - name: Create branch
+    - name: Create DAG and imports templates
       run: |
-        git branch "DAG-${{ github.event.issue.number }}"
-        git checkout "DAG-${{ github.event.issue.number }}"
-        git push --set-upstream origin "DAG-${{ github.event.issue.number }}"
+        echo "import dependencies.DAG-${{ github.event.issue.number }}.code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
+        echo "# Write your code here" > dags/dependencies/DAG-${{ github.event.issue.number }}-code.py
 
     - name: Create pull request
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v5
+
       with:
         base: "develop"
         branch: "DAG-${{ github.event.issue.number }}"
         title: 'PR DAG-${{ github.event.issue.number }}'
+        reviewers: 'marcosmartinezfco'
         body: 'To merge this PR, please contact @marcosmartinezfco
         
         Make sure you have tested and reviewed the code.
