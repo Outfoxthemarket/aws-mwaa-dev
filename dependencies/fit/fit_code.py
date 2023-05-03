@@ -64,7 +64,7 @@ def merge_check_sum(ti):
     df.drop(df.tail(1).index, inplace=True)  # Drop last row since it is NaN (should fix this)
     assert len(df1) == len(df2), "The two dataframes do not have the same number of rows"
     # Write the merged dataframe to a csv file
-    print(os.access(csv_path, os.W_OK | os.X_OK))
+    print(os.access("/usr/local/airflow", os.W_OK | os.X_OK))
     df.to_csv(os.path.join(csv_path, "merged.csv"), index=False)
     print("Merged file has been saved")
 

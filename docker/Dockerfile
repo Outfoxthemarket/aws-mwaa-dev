@@ -21,6 +21,7 @@ ARG INDEX_URL=""
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
 ENV PATH="$PATH:/usr/local/airflow/.local/bin:/root/.local/bin:/usr/local/airflow/.local/lib/python3.10/site-packages"
 ENV PYTHON_VERSION=3.10.9
+ENV PYTHONPATH="${AIRFLOW_USER_HOME}"
 
 COPY script/bootstrap.sh /bootstrap.sh
 COPY script/systemlibs.sh /systemlibs.sh
@@ -43,7 +44,7 @@ COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY config/webserver_config.py ${AIRFLOW_USER_HOME}/webserver_config.py
 
-RUN chown -R airflow: ${AIRFLOW_USER_HOME}
+RUN chown -R airflow ${AIRFLOW_USER_HOME}
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080 5555 8793
