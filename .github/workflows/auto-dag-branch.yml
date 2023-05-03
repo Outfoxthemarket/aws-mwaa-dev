@@ -1,0 +1,25 @@
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Create branch
+      run: |
+        git branch "DAG-${{ github.event.issue.number }}"
+        git checkout "DAG-${{ github.event.issue.number }}"
+        git push --set-upstream origin "DAG-${{ github.event.issue.number }}"
+
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        branch: "DAG-${{ github.event.issue.number }}"
+        title: 'PR DAG-${{ github.event.issue.number }}'
+        body: 'This pull request was created automatically from a new issue'
+

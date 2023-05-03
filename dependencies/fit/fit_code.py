@@ -1,10 +1,10 @@
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pandas as pd
 
 
 def download_raw_data(ti):
-    BASE_PATH = "/usr/local/airflow/dependencies/fit/data"
+    base_path = "/usr/local/airflow/dependencies/fit/data"
     # Create a folder for the quarter
     quarter = {
         4: "Q4",  # During April we submit the Q4 report for the previous year
@@ -50,7 +50,7 @@ def merge_check_sum(ti):
         df1), "The merged dataframe does not have the same number of rows as the two original dataframes"
     # Go over 2 size rolling windows to find the day we start getting only SF data
     flag = True
-    for window in df.shift(1).rolling(window=2, step=2,min_periods=0):  # Shift by 1 so windows start on the same day
+    for window in df.shift(1).rolling(window=2, step=2, min_periods=0):  # Shift by 1 so windows start on the same day
         if flag:  # Skip the first row since it is NaN
             flag = False
             continue
@@ -64,7 +64,6 @@ def merge_check_sum(ti):
     df.drop(df.tail(1).index, inplace=True)  # Drop last row since it is NaN (should fix this)
     assert len(df1) == len(df2), "The two dataframes do not have the same number of rows"
     # Write the merged dataframe to a csv file
-    print(os.access("/usr/local/airflow", os.W_OK | os.X_OK))
     df.to_csv(os.path.join(csv_path, "merged.csv"), index=False)
     print("Merged file has been saved")
 
@@ -112,6 +111,6 @@ def generate_fit_results(ti):
     df_pivot.loc['Total'] = df_pivot.sum()
     # Print the total amount figure
     print("Total amount - ", df_pivot.loc['Total', 'Amount'])
-    # Write fir report to excel file
-    # df_pivot.to_excel(os.path.join(ti.xcom_pull(key="CSV_PATH", task_ids="Download_CVS_Quicksight"), "fit_results.xlsx"))
-    # print("Fit result report file has been saved")
+    # Write fit report to excel file
+    df_pivot.to_excel(os.path.join(ti.xcom_pull(key="CSV_PATH", task_ids="Download_CVS_Quicksight"), "fit_results.xlsx"))
+    print("Fit result report file has been saved")
