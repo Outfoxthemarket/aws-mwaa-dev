@@ -21,5 +21,8 @@ jobs:
       with:
         branch: "DAG-${{ github.event.issue.number }}"
         title: 'PR DAG-${{ github.event.issue.number }}'
-        body: 'This pull request was created automatically from a new issue'
+        body: 'To merge this PR, please contact @marcosmartinezfco
+        
+        Make sure you have tested and reviewed the code.
+        This pull request was created automatically with github actions.'
 
