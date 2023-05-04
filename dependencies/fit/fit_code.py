@@ -102,7 +102,7 @@ def generate_fit_results(ti):
     print("Merged.csv file has been read")
     # Format the settlement_date columns into datetime
     df['settlement_date'] = pd.to_datetime(df['settlement_date'], format='%d/%m/%Y %H:%M')
-    # Create pivot table hat shows row data by month and on the columsn show the settlement code RF, SF and Total
+    # Create pivot table hat shows row data by month and on the columns show the settlement code RF, SF and Total
     df_pivot = pd.pivot_table(df.reset_index(), index=df['settlement_date'].dt.month_name(), columns='settlement_code',
                               values='total_consumption', aggfunc='sum', fill_value=0)
     # Create a column that takes the either the RF or SF value depending on wheter the Forecast column is 0 or not. If forecast is 0 then use SF, else use R1
