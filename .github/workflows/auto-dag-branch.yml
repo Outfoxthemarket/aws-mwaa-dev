@@ -19,6 +19,7 @@ jobs:
     - name: Create pull request
       uses: peter-evans/create-pull-request@v3
       with:
+        base: "develop"
         branch: "DAG-${{ github.event.issue.number }}"
         title: 'PR DAG-${{ github.event.issue.number }}'
         body: 'To merge this PR, please contact @marcosmartinezfco
