@@ -1,7 +1,7 @@
 name: Deploy to Dev environment
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - closed
   workflow_dispatch:
