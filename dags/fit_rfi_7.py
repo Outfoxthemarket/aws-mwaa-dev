@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-import dependencies.fit.fit_code as fit
+import dependencies.fit_7.fit_code as fit
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization

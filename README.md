@@ -1,49 +1,14 @@
-# About aws-mwaa-local-runner
+# About aws-mwaa-dev
 
 This repository provides a command line interface (CLI) utility that replicates an Amazon Managed Workflows for Apache Airflow (MWAA) environment locally.
 
-*Please note: MWAA/AWS/DAG/Plugin issues should be raised through AWS Support or the Airflow Slack #airflow-aws channel.  Issues here should be focused on this local-runner repository.*
 
 
-## About the CLI
+## About
 
 The CLI builds a Docker container image locally that’s similar to a MWAA production image. This allows you to run a local Apache Airflow environment to develop and test DAGs, custom plugins, and dependencies before deploying to MWAA.
 
-## What this repo contains
-
-```text
-dags/
-  example_lambda.py
-  example_dag_with_taskflow_api.py    
-  example_redshift_data_execute_sql.py
-docker/
-  config/
-    airflow.cfg
-    constraints.txt
-    mwaa-base-providers-requirements.txt
-    webserver_config.py
-    .env.localrunner
-  script/
-    bootstrap.sh
-    entrypoint.sh
-    systemlibs.sh
-    generate_key.sh
-  docker-compose-local.yml
-  docker-compose-resetdb.yml
-  docker-compose-sequential.yml
-  Dockerfile
-plugins/
-  README.md
-requirements/  
-  requirements.txt
-.gitignore
-CODE_OF_CONDUCT.md
-CONTRIBUTING.md
-LICENSE
-mwaa-local-env
-README.md
-VERSION
-```
+After testing your DAGs, custom plugins, and dependencies locally, you can upload them to your Amazon Simple Storage Service (Amazon S3) bucket and deploy them to MWAA automatically through PR.
 
 ## Prerequisites
 
@@ -54,11 +19,16 @@ VERSION
 ## Get started
 
 ```bash
-git clone https://github.com/aws/aws-mwaa-local-runner.git
-cd aws-mwaa-local-runner
+git clone https://github.com/Outfoxthemarket/aws-mwaa-dev.git
+cd aws-mwaa-dev
+```
+### Step one: Checkout the branch
+
+```bash
+git checkout DAG-<issue-number>
 ```
 
-### Step one: Building the Docker image
+### Step two: Building the Docker image
 
 Build the Docker container image using the following command:
 
@@ -68,7 +38,7 @@ Build the Docker container image using the following command:
 
 **Note**: it takes several minutes to build the Docker image locally.
 
-### Step two: Running Apache Airflow
+### Step three: Running Apache Airflow
 
 #### Local runner
 
@@ -80,7 +50,7 @@ Runs a local Apache Airflow environment that is a close representation of MWAA b
 
 To stop the local environment, Ctrl+C on the terminal and wait till the local runner and the postgres containers are stopped.
 
-### Step three: Accessing the Airflow UI
+### Step four: Accessing the Airflow UI
 
 By default, the `bootstrap.sh` script creates a username and password for your local Airflow environment.
 
@@ -91,14 +61,14 @@ By default, the `bootstrap.sh` script creates a username and password for your l
 
 - Open the Apache Airlfow UI: <http://localhost:8080/>.
 
-### Step four: Add DAGs and supporting files
+### Step five: Add DAGs and supporting files
 
-The following section describes where to add your DAG code and supporting files. We recommend creating a directory structure similar to your MWAA environment.
+The following section describes where to add your DAG code and supporting files.
 
 #### DAGs
 
-1. Add DAG code to the `dags/` folder.
-2. To run the sample code in this repository, see the `example_dag_with_taskflow_api.py` file.
+1. You should find your dag template in the `dags/` folder.
+2. Inside the template you should see the dependency imports, all the code for the DAG should go in that file.
 
 #### Requirements.txt
 
@@ -125,14 +95,6 @@ Installing collected packages: botocore, docutils, pyasn1, rsa, awscli, aws-batc
   Running setup.py install for aws-batch ... done
 Successfully installed aws-batch-0.6 awscli-1.19.21 botocore-1.20.21 docutils-0.15.2 pyasn1-0.4.8 rsa-4.7.2
 ```
-
-3. To package the necessary WHL files for your requirements.txt without running Apache Airflow, use the following script:
-
-```bash
-./mwaa-local-env package-requirements
-```
-
-For example usage see [Installing Python dependencies using PyPi.org Requirements File Format Option two: Python wheels (.whl)](https://docs.aws.amazon.com/mwaa/latest/userguide/best-practices-dependencies.html#best-practices-dependencies-python-wheels).
 
 #### Custom plugins
 
@@ -196,10 +158,6 @@ A Fernet Key is generated during image build (`./mwaa-local-env build-image`) an
 containers started from that image. This key is used to [encrypt connection passwords in the Airflow DB](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html).
 If changes are made to the image and it is rebuilt, you may get a new key that will not match the key used when
 the Airflow DB was initialized, in this case you will need to reset the DB (`./mwaa-local-env reset-db`).
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 

@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def download_raw_data(ti):
-    base_path = "/usr/local/airflow/dependencies/fit/data"
+    base_path = "/usr/local/airflow/dependencies/fit_7/data"
     # Create a folder for the quarter
     quarter = {
         4: "Q4",  # During April we submit the Q4 report for the previous year
@@ -27,9 +27,9 @@ def download_raw_data(ti):
     # Download csv files from quicksight into the folder
     print("Data has been downloaded into the folder")
     # Push the path to the csv files to the XCom
-    dummy = "/usr/local/airflow/dependencies/fit/data/Y13/Q4"
+    dummy = "/usr/local/airflow/dependencies/fit_7/data/Y13/Q4"
     ti.xcom_push(key="CSV_PATH", value=dummy)
-    print("[XCOM Push] - CSV_PATH: /usr/local/airflow/dependencies/fit/data/Y13/Q4")
+    print("[XCOM Push] - CSV_PATH: /usr/local/airflow/dependencies/fit_7/data/Y13/Q4")
 
 
 def merge_check_sum(ti):
@@ -111,6 +111,6 @@ def generate_fit_results(ti):
     df_pivot.loc['Total'] = df_pivot.sum()
     # Print the total amount figure
     print("Total amount - ", df_pivot.loc['Total', 'Amount'])
-    # Write fit report to excel file
+    # Write fit_7 report to excel file
     df_pivot.to_excel(os.path.join(ti.xcom_pull(key="CSV_PATH", task_ids="Download_CVS_Quicksight"), "fit_results.xlsx"))
     print("Fit result report file has been saved")

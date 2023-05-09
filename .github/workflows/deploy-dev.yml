@@ -1,0 +1,43 @@
+name: Deploy to Dev environment
+
+on:
+  pull_request_target:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      dag_number:
+        description: 'DAG number'
+        required: true
+
+jobs:
+  check-merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "The PR was merged"
+
+  deploy-dev:
+    needs: check-merged
+    runs-on: ubuntu-latest
+    environment: Dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Get DAG number
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]
+          then
+              echo "DAG_FILE_NUMBER=${{ github.event.inputs.dag_number }}" >> $GITHUB_ENV
+          else
+              echo "DAG_FILE_NUMBER=$(echo ${{ github.event.pull_request.title }} | cut -d' ' -f2 | cut -d'-' -f2)" >> $GITHUB_ENV
+          fi
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: DAG-${{ env.DAG_FILE_NUMBER }}
+          path: |
+            dags/*_${{ env.DAG_FILE_NUMBER }}.py
+            dependencies/*_${{ env.DAG_FILE_NUMBER }}/*.py
+          if-no-files-found: error
