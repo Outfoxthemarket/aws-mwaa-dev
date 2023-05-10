@@ -5,6 +5,8 @@ dags/**/*.pyc
 /logs
 /db-data
 .DS_Store
+*.xlsx
+*.csv
 
 # Environments
 .env
