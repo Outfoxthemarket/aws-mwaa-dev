@@ -1,7 +1,7 @@
 name: Deploy to Dev environment
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - closed
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
           echo "The PR was merged"
 
   deploy-dev:
-    needs: check-merged
+    #needs: check-merged
     runs-on: ubuntu-latest
     environment: Dev
     steps:
@@ -33,11 +33,18 @@ jobs:
           else
               echo "DAG_FILE_NUMBER=$(echo ${{ github.event.pull_request.title }} | cut -d' ' -f2 | cut -d'-' -f2)" >> $GITHUB_ENV
           fi
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: DAG-${{ env.DAG_FILE_NUMBER }}
-          path: |
-            dags/*_${{ env.DAG_FILE_NUMBER }}.py
-            dependencies/*_${{ env.DAG_FILE_NUMBER }}/*.py
-          if-no-files-found: error
+
+      - name: Install AWS cli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          sudo pip3 install awscli
+
+      - name: Sync file with S3
+        run: |
+          aws s3 sync dags/ s3://my-bucket/dags/ --exclude "*" --include "*_${{ env.DAG_FILE_NUMBER }}.py"
+          aws s3 sync dependencies/ s3://my-bucket/dependencies/ --exclude "*" --include "*_${{ env.DAG_FILE_NUMBER }}/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
