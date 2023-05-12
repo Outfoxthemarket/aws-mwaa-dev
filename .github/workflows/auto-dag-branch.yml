@@ -14,9 +14,8 @@ jobs:
 
     - name: Create DAG and imports templates
       run: |
-        echo "import dependencies.DAG-${{ github.event.issue.number }}.code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
-        mkdir dependencies/DAG-${{ github.event.issue.number }}
-        echo "# Write your code here" > dependencies/DAG-${{ github.event.issue.number }}/code.py
+        echo "import dependencies.DAG-${{ github.event.issue.number }}-code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
+        echo "# Write your code here" > dags/dependencies/DAG-${{ github.event.issue.number }}-code.py
 
     - name: Create pull request
       uses: peter-evans/create-pull-request@v5

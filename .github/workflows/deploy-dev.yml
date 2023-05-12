@@ -1,20 +1,37 @@
 name: Deploy to Dev environment
 
 on:
-  pull_request:
-    types:
-      - closed
+#  pull_request:
+#    types:
+#      - closed
+  workflow_dispatch:
+    inputs:
+      dag_number:
+        description: 'DAG number'
+        required: true
+      access_key:
+        description: 'AWS access key'
+        type: string
+        required: true
+      secret_key:
+        description: 'AWS secret key'
+        type: string
+        required: true
+      session_token:
+        description: 'AWS session token'
+        type: string
+        required: true
 
 jobs:
-  check-merged:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "The PR was merged"
+#  check-merged:
+#    if: github.event.pull_request.merged == true
+#    runs-on: ubuntu-latest
+#    steps:
+#      - run: |
+#          echo "The PR was merged"
 
   deploy-dev:
-    needs: check-merged
+    #needs: check-merged
     runs-on: ubuntu-latest
     environment: Dev
     steps:
@@ -39,9 +56,11 @@ jobs:
 
       - name: Sync file with S3
         run: |
-          aws s3 sync dags/ s3://my-bucket/dags/ --exclude "*" --include "*_${{ env.DAG_FILE_NUMBER }}.py"
-          aws s3 sync dependencies/ s3://my-bucket/dependencies/ --exclude "*" --include "*_${{ env.DAG_FILE_NUMBER }}/*"
+          aws s3 sync dags/ s3://zogsolutions-eu-west-2-mwaa/dags/ --exclude "*" --include "*-${{ env.DAG_FILE_NUMBER }}.py"
+          aws s3 sync dags/dependencies/ s3://zogsolutions-eu-west-2-mwaa/dags/dependencies/ --exclude "*" --include "DAG-${{ env.DAG_FILE_NUMBER }}-code.py"
+          aws s3 sync requirements/ s3://zogsolutions-eu-west-2-mwaa/requirements/ --exclude "*" --include "requirements.txt"
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ github.event.inputs.access_key }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.secret_key }}
+          AWS_SESSION_TOKEN: ${{ github.event.inputs.session_token }}
           AWS_DEFAULT_REGION: eu-west-2
