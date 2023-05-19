@@ -14,7 +14,7 @@ jobs:
 
     - name: Create DAG and imports templates
       run: |
-        echo "import dependencies.DAG-${{ github.event.issue.number }}.code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
+        echo "import dependencies.DAG-${{ github.event.issue.number }}-code as code" > dags/change_name_DAG-${{ github.event.issue.number }}.py
         echo "# Write your code here" > dags/dependencies/DAG-${{ github.event.issue.number }}-code.py
 
     - name: Create pull request
@@ -29,4 +29,3 @@ jobs:
         
         Make sure you have tested and reviewed the code.
         This pull request was created automatically with github actions.'
-
