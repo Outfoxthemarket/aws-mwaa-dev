@@ -56,8 +56,8 @@ jobs:
 
       - name: Sync file with S3
         run: |
-          aws s3 sync dags/ s3://zogsolutions-eu-west-2-mwaa/dags/ --exclude "*" --include "*-${{ env.DAG_FILE_NUMBER }}.py"
-          aws s3 sync dags/dependencies/ s3://zogsolutions-eu-west-2-mwaa/dags/dependencies/ --exclude "*" --include "DAG-${{ env.DAG_FILE_NUMBER }}-code.py"
+          aws s3 sync dags/ s3://zogsolutions-eu-west-2-mwaa/dags/ --exclude "*" --include "*_${{ env.DAG_FILE_NUMBER }}.py"
+          aws s3 sync dags/dependencies/ s3://zogsolutions-eu-west-2-mwaa/dags/dependencies/ --exclude "*" --include "DAG_${{ env.DAG_FILE_NUMBER }}_code.py"
           aws s3 sync requirements/ s3://zogsolutions-eu-west-2-mwaa/requirements/ --exclude "*" --include "requirements.txt"
         env:
           AWS_ACCESS_KEY_ID: ${{ github.event.inputs.access_key }}
