@@ -20,7 +20,7 @@ with DAG(
         # These args will get passed on to each operator
         # You can override them on a per-task basis during operator initialization
         default_args=DEFAULT_ARGS,
-        description="We don't want to do things manually",
+        description="Report with fuel and system data form BMRS",
         start_date=datetime(2023, 5, 25),
         schedule="30 8 * * 1-5",  # At 8 30 every day.
         catchup=False,
