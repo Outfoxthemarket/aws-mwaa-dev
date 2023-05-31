@@ -9,14 +9,14 @@ DEFAULT_ARGS = {
     "depends_on_past": False,
     "email": ["alli.issa@outfoxthemarket.co.uk", "marcos.martinez@outfoxthemarket.co.uk"],
     "email_on_failure": True,
-    "email_on_retry": False,
+    "email_on_retry": True,
     "email_on_success": False,
     "retries": 3,
     "retry_delay": timedelta(seconds=30),
 }
 
 with DAG(
-        dag_id="Alli_Automation",
+        dag_id="BMRS_Generation_Forecast_and_System_Price",
         # These args will get passed on to each operator
         # You can override them on a per-task basis during operator initialization
         default_args=DEFAULT_ARGS,

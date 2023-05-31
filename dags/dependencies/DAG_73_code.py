@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import requests
 import boto3
+import os
+from airflow.providers.smtp.hooks.smtp import SmtpHook
 
 S3 = boto3.resource('s3').Bucket('zogsolutions-eu-west-2-mwaa')
 BASE_URL = 'https://api.bmreports.com/BMRS'
@@ -75,9 +77,21 @@ def send_email():
     with io.BytesIO() as buffer:
         with pd.ExcelWriter(buffer) as writer:
             generation = pd.read_csv(S3.Object("tmp/DAG-73/generation.csv").get()['Body'])
-            generation.to_excel(writer, sheet_name='System', index=False)
+            generation.to_excel(writer, sheet_name='Generation', index=False)
             system = pd.read_csv(S3.Object("tmp/DAG-73/system.csv").get()['Body'])
-            system.to_excel(writer, sheet_name='Generation', index=False)
-        print(buffer.getvalue())
-        S3.put_object(Key=f"artifacts/DAG-73/{datetime.now().strftime('%Y-%m-%d')}/report.xlsx",Body=buffer.getvalue(), ContentType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    print('[+] Sending email')
+            system.to_excel(writer, sheet_name='System', index=False)
+        print('[+] Excel file created and saved to buffer')
+        S3.put_object(Key=f"artifacts/DAG-73/{datetime.now().strftime('%Y-%m-%d')}/System Prices and Generation.xlsx",Body=buffer.getvalue(), ContentType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    print('[+] Excel file saved to S3')
+    with SmtpHook('SMTP_SENDGRID') as mail:
+        print('[+] Saving file to local')
+        S3.Object(f"artifacts/DAG-73/{datetime.now().strftime('%Y-%m-%d')}/System Prices and Generation.xlsx").download_file('/usr/local/airflow/System Prices and Generation.xlsx')
+        mail.send_email_smtp(
+            to='alli.issa@outfoxthemarket.co.uk',
+            subject='System Prices and Generation (DAG-73)',
+            files=["/usr/local/airflow/System Prices and Generation.xlsx"],
+            html_content='<p>Hi Alli,</p><p>Please find attached the report for B1770 & FUELHH.</p><p>Regards,<br>Airflow</p><p>Do not reply to this address, this is an automated email.<br>Delivered by your fav Software Engineer <3. </p>',
+        )
+        print('[+] Removing file from local (consistency))')
+        os.remove("/usr/local/airflow/System Prices and Generation.xlsx")
+    print('[+] Email sent')
