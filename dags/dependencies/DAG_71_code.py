@@ -61,9 +61,7 @@ def unzip_dd_report():
     with zipfile.ZipFile('/usr/local/airflow/DDAdequacy.zip') as z:
         z.extractall("/usr/local/airflow", pwd=Variable.get("RED_FISH_ZIP_PASSWORD").encode())
     print("[+] Unzipped DDAdequacy.zip - saved locally")
-    df = pd.read_excel("/usr/local/airflow/DDAdequacy.xlsx",
-                       usecols=['ACCOUNT_NO', 'account_balance', 'direct_debit_amount', 'billing_day', 'annual_cost',
-                                'region_id', 'has_elec', 'has_gas', 'total_eac', 'total_aq'])
+    df = pd.read_excel("/usr/local/airflow/DDAdequacy.xlsx", usecols=['ACCOUNT_NO', 'account_balance', 'direct_debit_amount', 'billing_day', 'annual_cost','region_id', 'has_elec', 'has_gas', 'total_eac', 'total_aq'])
     df.columns = df.columns.str.upper()
     print(df.head(1))
     S3.put_object(Key="tmp/DAG-71/DDAdequacy.csv", Body=df.to_csv(index=False), ContentType='text/csv')
@@ -137,8 +135,20 @@ def calculate_adequate_dd_report():
     dd['YEARLY_GAS_COST'] = dd['YEARLY_GAS_COST'].apply(lambda x: round(x, 2))
     dd['YEARLY_TOTAL_COST'] = dd['YEARLY_ELEC_COST'] + dd['YEARLY_GAS_COST']
     dd['NEW_ADEQUATE_DD'] = dd['YEARLY_TOTAL_COST'] / 12
+    dd['NEW_ADEQUATE_DD'] = dd['NEW_ADEQUATE_DD'].apply(lambda x: round(x, 2))
     S3.put_object(Key="tmp/DAG-71/DDAdequacy.csv", Body=dd.to_csv(index=False), ContentType='text/csv')
 
 
 def new_dd_adequate():
-    pass
+    adequacy = pd.read_csv(S3.Object("tmp/DAG-71/DDAdequacy.csv").get()['Body'])
+    print("[+] Rows in DDAdequacy: ", len(adequacy))
+    daily = pd.read_csv(S3.Object("tmp/DAG-71/DailyLiveReport.csv").get()['Body'])
+    print("[+] Rows in DailyLiveReport: ", len(daily))
+    dd = adequacy.merge(daily, on='ACCOUNT_NO', how='left')
+    print("[+] Rows in merged dataframe: ", len(dd))
+    dd['ACCOUNT_BALANCE_1MONTH'] = dd['ACCOUNT_BALANCE'] + dd['NEW_ADEQUATE_DD']
+    dd['ACCOUNT_BALANCE_1MONTH'] = dd['ACCOUNT_BALANCE_1MONTH'].apply(lambda x: round(x, 2))
+    dd['BALANCE_SPLIT_ANNIVERSARY'] = dd['ACCOUNT_BALANCE_1MONTH'] / dd['MONTHS_TILL_ANNIVERSARY']
+    dd['BALANCE_SPLIT_ANNIVERSARY'] = dd['BALANCE_SPLIT_ANNIVERSARY'].apply(lambda x: round(x, 2))
+    dd['DD_INCLUDING_ACCOUNT_BALANCE'] = dd['BALANCE_SPLIT_ANNIVERSARY'] + dd['NEW_ADEQUATE_DD']
+    S3.put_object(Key=f"artifacts/DAG-71/{datetime.now().strftime('%Y-%m-%d')}/NewAdequateDD.csv", Body=dd.to_csv(index=False), ContentType='text/csv')
