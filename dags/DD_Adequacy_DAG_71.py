@@ -52,5 +52,27 @@ with DAG(
         python_callable=code.anniversary_date_daily_report
     )
 
+    task6 = PythonOperator(
+        task_id="Cost_Calculation_DD_Report",
+        python_callable=code.cost_calculations_dd_report
+    )
+
+    task7 = PythonOperator(
+        task_id="Pricing",
+        python_callable=code.pricing
+    )
+
+    task8 = PythonOperator(
+        task_id="Calculate_Adequate_DD_Report",
+        python_callable=code.calculate_adequate_dd_report
+    )
+
+    task9 = PythonOperator(
+        task_id="New_DD_Adequate",
+        python_callable=code.new_dd_adequate
+    )
+
     task1 >> task3 >> task5
-    task2 >> task4
+    task2 >> task4 >> task6
+    [task6, task7] >> task8
+    [task5, task8] >> task9

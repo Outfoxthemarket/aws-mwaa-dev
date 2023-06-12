@@ -6,6 +6,7 @@ import pandas as pd
 from airflow.providers.ftp.hooks.ftp import FTPSHook
 from airflow.models import Variable
 import zipfile
+import numpy as np
 
 S3 = boto3.resource('s3').Bucket('zogsolutions-eu-west-2-mwaa')
 RED_FISH = FTPSHook(ftp_conn_id="RED_FISH")
@@ -60,7 +61,9 @@ def unzip_dd_report():
     with zipfile.ZipFile('/usr/local/airflow/DDAdequacy.zip') as z:
         z.extractall("/usr/local/airflow", pwd=Variable.get("RED_FISH_ZIP_PASSWORD").encode())
     print("[+] Unzipped DDAdequacy.zip - saved locally")
-    df = pd.read_excel("/usr/local/airflow/DDAdequacy.xlsx", usecols=['ACCOUNT_NO','account_balance','direct_debit_amount','billing_day','annual_cost','region_id','has_elec','has_gas','total_eac','total_aq'])
+    df = pd.read_excel("/usr/local/airflow/DDAdequacy.xlsx",
+                       usecols=['ACCOUNT_NO', 'account_balance', 'direct_debit_amount', 'billing_day', 'annual_cost',
+                                'region_id', 'has_elec', 'has_gas', 'total_eac', 'total_aq'])
     df.columns = df.columns.str.upper()
     print(df.head(1))
     S3.put_object(Key="tmp/DAG-71/DDAdequacy.csv", Body=df.to_csv(index=False), ContentType='text/csv')
@@ -86,3 +89,56 @@ def anniversary_date_daily_report():
     df['MONTHS_TILL_ANNIVERSARY'] = df['MONTHS_TILL_ANNIVERSARY'].apply(lambda date: date + 12 if date <= 3 else date)
     S3.put_object(Key="tmp/DAG-71/DailyLiveReport.csv", Body=df.to_csv(index=False), ContentType='text/csv')
 
+
+def cost_calculations_dd_report():
+    dd = pd.read_csv(S3.Object("tmp/DAG-71/DDAdequacy.csv").get()['Body'])
+    dd['ABS_ACCOUNT_BALANCE'] = np.abs(dd['ACCOUNT_BALANCE'])
+    dd['ANNUAL_COST_INC_VAT'] = dd['ANNUAL_COST'] * 1.05
+    dd['ANNUAL_COST_INC_VAT'] = dd['ANNUAL_COST_INC_VAT'].apply(lambda x: round(x, 2))
+    dd['MONTHLY_COST_INC_VAT'] = dd['ANNUAL_COST_INC_VAT'] / 12
+    dd['MONTHLY_COST_INC_VAT'] = dd['MONTHLY_COST_INC_VAT'].apply(lambda x: round(x, 2))
+    dd['CREDIT_OR_DEBIT'] = dd['ACCOUNT_BALANCE'].apply(lambda x: 'CREDIT' if x < 0 else 'DEBIT')
+    S3.put_object(Key="tmp/DAG-71/DDAdequacy.csv", Body=dd.to_csv(index=False), ContentType='text/csv')
+
+
+def pricing():
+    print("[+] Dummy prices")
+    pass
+
+
+def calculate_adequate_dd_report():
+    days = {
+        'Q1': 90,
+        'Q2': 91,
+        'Q3': 92,
+        'Q4': 92
+    }
+
+    def get_end_quarter():
+        match 'Q' + str((datetime.now().month - 1) // 3 + 1):
+            case 'Q1':
+                return datetime(datetime.now().year, 3, 31)
+            case 'Q2':
+                return datetime(datetime.now().year, 6, 30)
+            case 'Q3':
+                return datetime(datetime.now().year, 9, 30)
+            case 'Q4':
+                return datetime(datetime.now().year, 12, 31)
+
+    percentage = (get_end_quarter() - datetime.now()).days / days['Q' + str((datetime.now().month - 1) // 3 + 1)]
+    print(f'[+] Percentage of quarter passed: {percentage}')
+    print("[+] Downloading Dummy-prices.csv from S3")
+    dummy_prices = pd.read_csv(S3.Object("tmp/DAG-71/Dummy-prices.csv").get()['Body'])
+    dd = pd.read_csv(S3.Object("tmp/DAG-71/DDAdequacy.csv").get()['Body'])
+    dd = dd.merge(dummy_prices, on='REGION_ID', how='left')
+    dd['YEARLY_ELEC_COST'] = dd.apply(lambda row: (row['ELEC_STANDING_CHARGE'] * 365 + row['ELEC_UNIT_RATE'] * row['TOTAL_EAC']) / 100 if row['HAS_ELEC'] else 0, axis=1)
+    dd['YEARLY_ELEC_COST'] = dd['YEARLY_ELEC_COST'].apply(lambda x: round(x, 2))
+    dd['YEARLY_GAS_COST'] = dd.apply(lambda row: (row['GAS_STANDING_CHARGE'] * 365 + row['GAS_UNIT_RATE'] * row['TOTAL_AQ']) / 100 if row['HAS_GAS'] else 0, axis=1)
+    dd['YEARLY_GAS_COST'] = dd['YEARLY_GAS_COST'].apply(lambda x: round(x, 2))
+    dd['YEARLY_TOTAL_COST'] = dd['YEARLY_ELEC_COST'] + dd['YEARLY_GAS_COST']
+    dd['NEW_ADEQUATE_DD'] = dd['YEARLY_TOTAL_COST'] / 12
+    S3.put_object(Key="tmp/DAG-71/DDAdequacy.csv", Body=dd.to_csv(index=False), ContentType='text/csv')
+
+
+def new_dd_adequate():
+    pass
