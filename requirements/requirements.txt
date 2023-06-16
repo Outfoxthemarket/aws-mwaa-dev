@@ -8,5 +8,5 @@ apache-airflow-providers-smtp==1.1.0
 pandas==1.5.2
 openpyxl==3.1.2
 boto3==1.26.51
-requests==2.28.2re
-
+requests==2.28.2
+zenpy==2.0.25

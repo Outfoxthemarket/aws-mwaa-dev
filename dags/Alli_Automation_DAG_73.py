@@ -7,7 +7,7 @@ from dependencies import DAG_73_code as code
 # You can override them on a per-task basis during operator initialization
 DEFAULT_ARGS = {
     "depends_on_past": False,
-    "email": ["alli.issa@outfoxthemarket.co.uk", "marcos.martinez@outfoxthemarket.co.uk"],
+    "email": ["alli.issa@outfoxthemarket.co.uk", "marcos.martinez@outfoxthemarket.co.uk", "cecilia.chan@outfoxthemarket.co.uk"],
     "email_on_failure": True,
     "email_on_retry": True,
     "email_on_success": False,
@@ -22,7 +22,7 @@ with DAG(
         default_args=DEFAULT_ARGS,
         description="Report with fuel and system data form BMRS",
         start_date=datetime(2023, 5, 25),
-        schedule="30 8 * * 1-5",  # At 8 30 every day.
+        schedule="0 6 * * *",  # At 8 30 every day.
         catchup=False,
         tags=["Alli", "Elexon", "BMRS", "Beta"],
 ) as dag:

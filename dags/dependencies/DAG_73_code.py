@@ -87,7 +87,7 @@ def send_email():
         print('[+] Saving file to local')
         S3.Object(f"artifacts/DAG-73/{datetime.now().strftime('%Y-%m-%d')}/System Prices and Generation.xlsx").download_file('/usr/local/airflow/System Prices and Generation.xlsx')
         mail.send_email_smtp(
-            to='alli.issa@outfoxthemarket.co.uk',
+            to=['alli.issa@outfoxthemarket.co.uk', 'cecilia.chan@outfoxthemarket.co.uk'],
             subject='System Prices and Generation (DAG-73)',
             files=["/usr/local/airflow/System Prices and Generation.xlsx"],
             html_content='<p>Hi Alli,</p><p>Please find attached the report for B1770 & FUELHH.</p><p>Regards,<br>Airflow</p><p>Do not reply to this address, this is an automated email.<br>Delivered by your fav Software Engineer <3. </p>',
