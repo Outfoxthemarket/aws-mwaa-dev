@@ -73,4 +73,53 @@ with DAG(
         op_kwargs={"file": "DF"}
     )
 
+    ReduceII = PythonOperator(
+        task_id="Reduce_II",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "II"}
+    )
+
+    ReduceSF = PythonOperator(
+        task_id="Reduce_SF",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "SF"}
+    )
+
+    ReduceR1 = PythonOperator(
+        task_id="Reduce_R1",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "R1"}
+    )
+
+    ReduceR2 = PythonOperator(
+        task_id="Reduce_R2",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "R2"}
+    )
+
+    ReduceR3 = PythonOperator(
+        task_id="Reduce_R3",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "R3"}
+    )
+
+    ReduceRF = PythonOperator(
+        task_id="Reduce_RF",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "RF"}
+    )
+
+    ReduceDF = PythonOperator(
+        task_id="Reduce_DF",
+        python_callable=code.reduce_data,
+        op_kwargs={"file": "DF"}
+    )
+
     fetch >> [slaveII, slaveSF, slaveR1, slaveR2, slaveR3, slaveRF, slaveDF]
+    slaveII >> ReduceII
+    slaveSF >> ReduceSF
+    slaveR1 >> ReduceR1
+    slaveR2 >> ReduceR2
+    slaveR3 >> ReduceR3
+    slaveRF >> ReduceRF
+    slaveDF >> ReduceDF

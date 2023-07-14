@@ -12,7 +12,7 @@ ROOT_DIR = f"/p114/{TARGET_DAY}"
 
 
 def fetch_elexon_data(ti):
-    print(f"[+] Fetching Elexon data for {TARGET_DAY} from {ROOT_DIR}")
+    print(f"[+] Fetching Elexon data for {TARGET_DAY} from ftp://ftp.elexonportal.co.uk{ROOT_DIR}")
     count = {
         "DF": 0,
         "II": 0,
@@ -43,8 +43,39 @@ def slave_unzip(ti, file):
     for i in range(1, ti.xcom_pull(key=file) + 1):
         print(f"[+] Downloading {file}-{i}.gz from S3")
         S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.gz").download_file(f"/usr/local/airflow/{file}-{i}.gz")
-        print(f"[+] File Downloaded from S3 -- {os.path.isfile(f'/usr/local/airflow/{file}-{i}.zip')}")
+        print(f"[+] File Downloaded from S3 -- {os.path.isfile(f'/usr/local/airflow/{file}-{i}.gz')}")
         with gzip.open(f"/usr/local/airflow/{file}-{i}.gz") as z:
-            S3.put_object(Key=f"tmp/DAG-81/{file}/{file}-{i}.csv", Body=z.read(), ContentType='text/csv')
+            S3.put_object(Key=f"tmp/DAG-81/{file}/{file}-{i}.txt", Body=z.read(), ContentType='text/txt')
         os.remove(f"/usr/local/airflow/{file}-{i}.gz")
         print(f'[+] File removed from local -- {not os.path.isfile(f"/usr/local/airflow/{file}-{i}.gz")}')
+        S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.gz").delete()
+        print(f"[+] File deleted from S3")
+
+
+def reduce_data(ti, file):
+    print(f"[+] Number of files to reduce: {ti.xcom_pull(key=file)}")
+    with io.StringIO() as report:
+        for i in range(1, ti.xcom_pull(key=file) + 1):
+            print(f"[+] Downloading {file}-{i}.txt from S3")
+            with io.StringIO(
+                    S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.txt").get()['Body'].read().decode('utf-8')) as partition:
+                print(f"[+] Reducing {file}-{i}.txt")
+                settlementFlag = False
+                for line in partition:
+                    contents = line.split("|")
+                    if not settlementFlag and contents[0] != "SPI":
+                        continue
+                    elif contents[0] == "SPI":
+                        settlementFlag = True
+                        settlementPeriod = contents[1]
+                        assert int(settlementPeriod) <= 50, "Settlement Period is greater than 50"
+                    elif contents[0] == "BPI" and any(["OFTM" in contents[1], "FXGL" in contents[1], "SPAL" in contents[1]]):
+                        output = [TARGET_DAY,
+                                  settlementPeriod,
+                                  contents[2].split("__")[-1],
+                                  contents[-3],
+                                  f'{contents[-2]}\n']
+                        report.write(";".join(output))
+            S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.txt").delete()
+            print(f"[+] Finished reducing {file}-{i}.txt")
+        S3.put_object(Key=f"tmp/DAG-81/reduce/{file}.csv", Body=report.getvalue(), ContentType='text/csv')
