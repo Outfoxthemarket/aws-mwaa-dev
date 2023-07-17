@@ -21,3 +21,7 @@ venv.bak/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Dags
+dags/Email_Deposit.py
+dags/dependencies/helper.py

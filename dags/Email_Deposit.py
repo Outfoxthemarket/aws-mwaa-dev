@@ -1,14 +1,15 @@
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from dependencies import dummy_code as code
+from airflow.providers.smtp.hooks.smtp import SmtpHook
+
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 DEFAULT_ARGS = {
     "depends_on_past": False,
     "email": ["marcos.martinez@outfoxthemarket.co.uk"],
-    "email_on_failure": False,
+    "email_on_failure": True,
     "email_on_retry": False,
     "email_on_success": False,
     "retries": 1,
@@ -20,20 +21,25 @@ with DAG(
         # These args will get passed on to each operator
         # You can override them on a per-task basis during operator initialization
         default_args=DEFAULT_ARGS,
-        description="Quarterly generation of FIR report",
+        description="Send email to get my deposit back",
         start_date=datetime(2023, 1, 1),
-        schedule="30 9 15 4,7,10,1 *",  # At 09:30 on day-of-month 15 in April, July, October, and January.
+        schedule="0 9 * * *",
         catchup=False,
         tags=["Marcos", "Dummy", "Test"],
 ) as dag:
+
+    def send_email():
+        with SmtpHook(smtp_conn_id="SMTP_SENDGRID") as mail:
+            mail.send_email_smtp(
+                to="Marcos.Martinez@outfoxthemarket.co.uk",  #"info@brinkriley.co.uk",
+                from_email="almighty@email.com",
+                subject="Dummy",
+                html_content="Dummy",
+            )
+
     task1 = PythonOperator(
-        task_id="First",
-        python_callable=code.dummy
+        task_id="Send_Email",
+        python_callable=send_email
     )
 
-    task2 = PythonOperator(
-        task_id="Second",
-        python_callable=code.dummy2
-    )
-
-    task1 >> task2
+    task1
