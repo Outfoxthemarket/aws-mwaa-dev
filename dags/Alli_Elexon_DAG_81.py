@@ -11,8 +11,8 @@ DEFAULT_ARGS = {
     "email_on_failure": False,
     "email_on_retry": False,
     "email_on_success": False,
-    "retries": 3,
-    "retry_delay": timedelta(seconds=30),
+    "retries": 10,
+    "retry_delay": timedelta(seconds=45),
 }
 
 with DAG(

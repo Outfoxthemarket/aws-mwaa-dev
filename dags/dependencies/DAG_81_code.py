@@ -73,8 +73,9 @@ def reduce_data(ti, file):
                         output = [TARGET_DAY,
                                   settlementPeriod,
                                   contents[2].split("__")[-1],
-                                  contents[-3],
-                                  f'{contents[-2]}\n']
+                                  contents[1].split("__")[1][1:5],
+                                  contents[-4],
+                                  f'{contents[-3]}\n']
                         report.write(";".join(output))
             S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.txt").delete()
             print(f"[+] Finished reducing {file}-{i}.txt")
