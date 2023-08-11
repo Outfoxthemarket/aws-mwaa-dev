@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from dependencies import dummy_code as code
+from dependencies import helper as code
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -26,14 +26,10 @@ with DAG(
         catchup=False,
         tags=["Marcos", "Dummy", "Test"],
 ) as dag:
+
     task1 = PythonOperator(
         task_id="First",
         python_callable=code.dummy
     )
 
-    task2 = PythonOperator(
-        task_id="Second",
-        python_callable=code.dummy2
-    )
-
-    task1 >> task2
+    task1

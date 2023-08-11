@@ -55,28 +55,32 @@ def slave_unzip(ti, file):
 def reduce_data(ti, file):
     print(f"[+] Number of files to reduce: {ti.xcom_pull(key=file)}")
     with io.StringIO() as report:
+        print(f"[+] Report object: {report}")
         for i in range(1, ti.xcom_pull(key=file) + 1):
             print(f"[+] Downloading {file}-{i}.txt from S3")
             with io.StringIO(
                     S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.txt").get()['Body'].read().decode('utf-8')) as partition:
                 print(f"[+] Reducing {file}-{i}.txt")
-                settlementFlag = False
                 for line in partition:
                     contents = line.split("|")
-                    if not settlementFlag and contents[0] != "SPI":
-                        continue
+                    if contents[0] == "SRH":
+                        date = datetime.strptime(contents[1], "%Y%m%d")
                     elif contents[0] == "SPI":
-                        settlementFlag = True
                         settlementPeriod = contents[1]
                         assert int(settlementPeriod) <= 50, "Settlement Period is greater than 50"
-                    elif contents[0] == "BPI" and any(["OFTM" in contents[1], "FXGL" in contents[1], "SPAL" in contents[1]]):
-                        output = [TARGET_DAY,
+                    elif contents[0] == "BPI" and any(
+                            ["OFTM" in contents[1], "FXGL" in contents[1], "SPAL" in contents[1]]):
+                        output = [date.strftime("%d/%m/%Y"),
                                   settlementPeriod,
                                   contents[2].split("__")[-1],
-                                  contents[1].split("__")[1][1:5],
+                                  contents[1].split("__")[1][1:5],  # 4-digit code for the supplier
                                   contents[-4],
                                   f'{contents[-3]}\n']
                         report.write(";".join(output))
+                    else:
+                        continue
+        for i in range(1, ti.xcom_pull(key=file) + 1):
             S3.Object(f"tmp/DAG-81/{file}/{file}-{i}.txt").delete()
             print(f"[+] Finished reducing {file}-{i}.txt")
         S3.put_object(Key=f"tmp/DAG-81/reduce/{file}.csv", Body=report.getvalue(), ContentType='text/csv')
+        report.flush()

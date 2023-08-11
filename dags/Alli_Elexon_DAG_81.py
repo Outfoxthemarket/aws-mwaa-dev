@@ -8,7 +8,7 @@ from dependencies import DAG_81_code as code
 DEFAULT_ARGS = {
     "depends_on_past": False,
     "email": ["alli.issa@outfoxthemarket.co.uk", "marcos.martinez@outfoxthemarket.co.uk"],
-    "email_on_failure": False,
+    "email_on_failure": True,
     "email_on_retry": False,
     "email_on_success": False,
     "retries": 10,
@@ -22,7 +22,7 @@ with DAG(
         default_args=DEFAULT_ARGS,
         description="Settlement Period Data",
         start_date=datetime(2023, 7, 12),
-        schedule="0 5 * * 1-5",  # At 05:00 on every day-of-week from Monday through Friday.
+        schedule="0 5 * * 2-6",  # At 05:00 on every day-of-week from Monday through Friday.
         catchup=False,
         tags=["Alli", "G", "Elexon", "Beta"],
 ) as dag:

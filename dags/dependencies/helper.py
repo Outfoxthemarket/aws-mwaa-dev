@@ -1,12 +1,11 @@
-import boto3
-import pandas as pd
-
-S3 = boto3.resource('s3').Bucket('zogsolutions-eu-west-2-mwaa')
+from airflow.providers.smtp.hooks.smtp import SmtpHook
 
 
-def write_df_s3_csv(df: pd.DataFrame, key: str):
-    S3.put_object(Key=key, Body=df.to_csv(), ContentType='text/csv')
-
-
-def read_df_s3_csv(key: str) -> pd.DataFrame:
-    return pd.read_csv(S3.Object(key).get()['Body'])
+def dummy():
+    with SmtpHook('SMTP_SENDGRID') as mail:
+        mail.send_email_smtp(
+            to=['rhea.bastian@homeenergy.co.uk', 'marcos.martinez@outfoxthemarket.co.uk'],
+            subject='I am the subject',
+            from_email='prettyspaniard@arriba.es',
+            html_content='<p>Paella is not spicy</p>'
+        )
